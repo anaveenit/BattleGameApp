@@ -6,6 +6,7 @@ const { createPlayer } = require("./players");
 const { processBattles, battleQueue } = require("./battleProcessor");
 const { getLeaderboard } = require("./leaderboard");
 const secretKey = "your_secret_key";
+const { authenticate } = require("./auth"); // Require the authenticate middleware
 
 // Create Express app
 const app = express();
@@ -14,10 +15,10 @@ app.use(bodyParser.json());
 // API Routes
 
 // Create a new player
-app.post("/players", createPlayer);
+app.post("/players", authenticate, createPlayer);
 
 // Queue a battle
-app.post("/battles", (req, res) => {
+app.post("/battles", authenticate, (req, res) => {
   const { attackerId, defenderId } = req.body;
 
   // Validate input
@@ -35,14 +36,14 @@ app.post("/battles", (req, res) => {
 });
 
 // Retrieve leaderboard
-app.get("/leaderboard", getLeaderboard);
+app.get("/leaderboard", authenticate, getLeaderboard);
 
 // Authenticate user and generate token
 app.post("/auth", (req, res) => {
   const { username, password } = req.body;
 
   // Validate username and password
-  if (username !== "admin" || password !== "admin123") {
+  if (username !== "admin" || password !== "password") {
     return res.status(401).json({ error: "Invalid credentials" });
   }
 

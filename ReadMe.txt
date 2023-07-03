@@ -87,7 +87,7 @@ Authentication:
 The application uses JSON Web Tokens (JWT) for authentication. To obtain a token, send a POST request to the /auth endpoint with the following credentials:
 
 Username: admin
-Password: admin123
+Password: password
 The token will be returned in the response, which can then be used to authorize subsequent requests by including it in the Authorization header as follows:
 
 Authorization:  <token>

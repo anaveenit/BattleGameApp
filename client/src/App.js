@@ -50,7 +50,7 @@ function App() {
   const login = () => {
     const credentials = { username: "admin", password: "password" }; // Replace with actual login credentials
     axios
-      .post("/login", credentials)
+      .post("/auth", credentials)
       .then((response) => {
         console.log(response.data);
         const token = response.data.token;
