@@ -55,6 +55,12 @@ const executeBattle = (battle) => {
     let attacker = results.find((player) => player.id === attackerId);
     let defender = results.find((player) => player.id === defenderId);
 
+    // Check if attacker and defender are not undefined
+    if (!attacker || !defender) {
+      console.error("Attacker or Defender not found");
+      return;
+    }
+
     // Calculate damage and update attack values based on hit points
     const attackerDamage = Math.ceil(attacker.hit_points * 0.1);
     attacker.attack = Math.max(

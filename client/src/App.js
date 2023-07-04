@@ -8,6 +8,8 @@ function App() {
   const [hitPoints, setHitPoints] = useState("");
   const [luck, setLuck] = useState("");
   const [token, setToken] = useState("");
+  const [attackerId, setAttacker] = useState(1);
+  const [defenderId, setDefender] = useState(2);
 
   const createPlayer = () => {
     axios
@@ -28,8 +30,8 @@ function App() {
 
   const submitBattle = () => {
     // Replace attackerId and defenderId with the selected player IDs
-    const attackerId = 1;
-    const defenderId = 2;
+    // const attackerId = 1;
+    // const defenderId = 2;
 
     axios
       .post(
@@ -120,6 +122,21 @@ function App() {
       <button onClick={createPlayer}>Create Player</button>
 
       <h2>Submit Battle</h2>
+
+      <br></br>
+
+      <input
+        type="number"
+        placeholder="AttackerID"
+        value={attackerId}
+        onChange={(e) => setAttacker(parseInt(e.target.value))}
+      />
+      <input
+        type="number"
+        placeholder="DefenderID"
+        value={defenderId}
+        onChange={(e) => setDefender(parseInt(e.target.value))}
+      />
       <button onClick={submitBattle}>Submit Battle</button>
 
       <h2>Leaderboard</h2>
