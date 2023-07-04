@@ -1,5 +1,7 @@
 #!/bin/bash
 
+touch battle_report.txt
+
 # Function to calculate the attack value based on hit points
 calculate_attack() {
   local base_attack=$1

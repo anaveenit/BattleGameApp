@@ -1,40 +1,101 @@
 // battleProcessor.js
 const connection = require("./db");
-const battleQueue = require("./queue");
 
-// // Battle Processor Queue
-// const battleQueue = [];
+// Battle Processor Queue
+const battleQueue = [];
 
-// let battles = [];
-// battleQueue.add({ attackerId: 1, defenderId: 2 });
+let battles = [];
+
+// Attacker ID, Attacker Name, Attacker Attack, Attacker Hit Points, Attacker Luck, Attacker Gold,
+// Defender ID, Defender Name, Defender Attack, Defender Hit Points, Defender Luck, Defender Gold
+battles.push({
+  attacker_id: 1,
+  attacker_name: "Player A",
+  attacker_attack: 70,
+  attacker_hit_points: 100,
+  attacker_luck: 30,
+  attacker_gold: 1000,
+  defender_id: 2,
+  defender_name: "Player B",
+  defender_attack: 80,
+  defender_hit_points: 100,
+  defender_luck: 20,
+  defender_gold: 2000,
+});
+
+battles.push({
+  attacker_id: 3,
+  attacker_name: "Player C",
+  attacker_attack: 60,
+  attacker_hit_points: 90,
+  attacker_luck: 40,
+  attacker_gold: 1500,
+  defender_id: 4,
+  defender_name: "Player D",
+  defender_attack: 90,
+  defender_hit_points: 110,
+  defender_luck: 15,
+  defender_gold: 2500,
+});
+
+battles.push({
+  attacker_id: 5,
+  attacker_name: "Player E",
+  attacker_attack: 75,
+  attacker_hit_points: 120,
+  attacker_luck: 25,
+  attacker_gold: 1800,
+  defender_id: 6,
+  defender_name: "Player F",
+  defender_attack: 85,
+  defender_hit_points: 80,
+  defender_luck: 10,
+  defender_gold: 2200,
+});
+
+let battleStrings = battles.map((battle) => {
+  return `${battle.attacker_id}|${battle.attacker_name}|${battle.attacker_attack}|${battle.attacker_hit_points}|${battle.attacker_luck}|${battle.attacker_gold}|${battle.defender_id}|${battle.defender_name}|${battle.defender_attack}|${battle.defender_hit_points}|${battle.defender_luck}|${battle.defender_gold}`;
+});
+
+const array = ["1,000", "2,000", "3,000"];
+
+const modifiedArray = battleStrings.map((element) => element.replace(/,/g, ""));
+const modifiedString = modifiedArray
+  .map((element) => `"${element}"`)
+  .join("\n");
+
+console.log(modifiedString);
+
+const { exec } = require("child_process");
+
+const scriptPath = "./src/battleScript.sh";
+
+const command = `sh ${scriptPath} ${modifiedString}`;
+
+exec(command, (error, stdout, stderr) => {
+  if (error) {
+    console.error(`Error executing the shell script: ${error}`);
+    return;
+  }
+
+  if (stderr) {
+    console.error(`Error output from the shell script: ${stderr}`);
+    return;
+  }
+
+  console.log(`Output from the shell script: ${stdout}`);
+});
+
 // Battle Processor
-// battleQueue.process(async (job, done) => {
-//   console.log("In BattleQueue");
-//   const battle = job.data;
-//   await executeBattle(battle);
-
-//   done();
-// });
-
-// // Battle Processor
-// const processBattles = () => {
-//   if (battleQueue.length > 0) {
-//     const battle = battleQueue.shift();
-//     executeBattle(battle);
-//   }
-// };
+const processBattles = () => {
+  if (battleQueue.length > 0) {
+    const battle = battleQueue.shift();
+    executeBattle(battle);
+  }
+};
 
 // Execute Battle
 const executeBattle = (battle) => {
-  // Create an empty report object
-  let report = {
-    attacker: null,
-    defender: null,
-    attackMissed: false,
-    goldStolen: 0,
-    defenderDefeated: false,
-  };
-
   // Retrieve attacker and defender from battle object
   const { attackerId, defenderId } = battle;
 
@@ -74,7 +135,6 @@ const executeBattle = (battle) => {
     // Process battle outcome
     if (isAttackMissed) {
       console.log("Attack missed");
-      report.attackMissed = true;
     } else {
       // Swap attacker and defender roles
       const temp = attacker;
@@ -87,7 +147,6 @@ const executeBattle = (battle) => {
       // Check if defender's hit points reach zero
       if (defender.hit_points <= 0) {
         console.log("Defender defeated");
-        report.defenderDefeated = true;
 
         // Calculate gold stolen between 10% and 20% of defender's total gold
         const goldStolen = Math.floor(
@@ -97,9 +156,6 @@ const executeBattle = (battle) => {
         // Update gold amounts for attacker and defender
         attacker.gold += goldStolen;
         defender.gold -= goldStolen;
-        report.goldStolen = goldStolen;
-
-        console.log(`Gold Stolen: ${goldStolen}`);
 
         // Submit battle result to leaderboard
         submitBattleResult(attacker.id, goldStolen);
@@ -121,8 +177,8 @@ const executeBattle = (battle) => {
     updatePlayer(attacker);
     updatePlayer(defender);
 
-    report.attacker = attacker;
-    report.defender = defender;
+    // Process next battle
+    processBattles();
   });
 };
 
@@ -157,5 +213,6 @@ const updatePlayer = (player) => {
 };
 
 module.exports = {
-  executeBattle,
+  processBattles,
+  battleQueue,
 };

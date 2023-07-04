@@ -3,7 +3,8 @@ const express = require("express");
 const bodyParser = require("body-parser");
 const jwt = require("jsonwebtoken");
 const { createPlayer } = require("./players");
-const { processBattles, battleQueue } = require("./battleProcessor");
+// const { processBattles } = require("./battleProcessor");
+const battleQueue = require("./queue");
 const { getLeaderboard } = require("./leaderboard");
 const secretKey = "your_secret_key";
 const { authenticate } = require("./auth"); // Require the authenticate middleware
@@ -11,6 +12,17 @@ const { authenticate } = require("./auth"); // Require the authenticate middlewa
 // Create Express app
 const app = express();
 app.use(bodyParser.json());
+
+const { executeBattle } = require("./battleProcessor");
+
+// Battle Processor
+battleQueue.process(async (job, done) => {
+  console.log("In BattleQueue");
+  const battle = job.data;
+  await executeBattle(battle);
+
+  done();
+});
 
 // API Routes
 
@@ -27,10 +39,10 @@ app.post("/battles", authenticate, (req, res) => {
   }
 
   // Add battle to the queue
-  battleQueue.push({ attackerId, defenderId });
+  battleQueue.add({ attackerId, defenderId });
 
-  // Process battles
-  processBattles();
+  // // Process battles
+  // processBattles();
 
   return res.json({ message: "Battle queued" });
 });
