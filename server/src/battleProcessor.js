@@ -2,28 +2,6 @@
 const connection = require("./db");
 const battleQueue = require("./queue");
 
-// // Battle Processor Queue
-// const battleQueue = [];
-
-// let battles = [];
-// battleQueue.add({ attackerId: 1, defenderId: 2 });
-// Battle Processor
-// battleQueue.process(async (job, done) => {
-//   console.log("In BattleQueue");
-//   const battle = job.data;
-//   await executeBattle(battle);
-
-//   done();
-// });
-
-// // Battle Processor
-// const processBattles = () => {
-//   if (battleQueue.length > 0) {
-//     const battle = battleQueue.shift();
-//     executeBattle(battle);
-//   }
-// };
-
 // Execute Battle
 const executeBattle = (battle) => {
   // Create an empty report object
@@ -61,74 +39,97 @@ const executeBattle = (battle) => {
       return;
     }
 
-    // Calculate damage and update attack values based on hit points
-    const attackerDamage = Math.ceil(attacker.hit_points * 0.1);
-    attacker.attack = Math.max(
-      Math.floor(attacker.attack - attackerDamage),
-      Math.floor(attacker.attack * 0.5)
-    );
+    const maxRounds = 1000; // maximum number of rounds in a battle
+    let round = 0; // current round
 
-    const defenderDamage = Math.ceil(defender.hit_points * 0.1);
-    defender.attack = Math.max(
-      Math.floor(defender.attack - defenderDamage),
-      Math.floor(defender.attack * 0.5)
-    );
+    // Battle loop
+    while (
+      attacker.hit_points > 0 &&
+      defender.hit_points > 0 &&
+      round < maxRounds
+    ) {
+      round++;
+      // Calculate damage and update attack values based on hit points
+      const attackerDamage = Math.ceil(attacker.hit_points * 0.1);
+      const attackerAttackLoss = Math.ceil(
+        attacker.attack * (attackerDamage / attacker.hit_points)
+      );
+      attacker.attack = Math.max(
+        attacker.attack - attackerAttackLoss,
+        attacker.attack * 0.5
+      );
 
-    // Check if attack misses based on defender's luck value
-    const isAttackMissed = Math.random() < defender.luck / 100;
+      const defenderDamage = Math.ceil(defender.hit_points * 0.1);
+      const defenderAttackLoss = Math.ceil(
+        defender.attack * (defenderDamage / defender.hit_points)
+      );
+      defender.attack = Math.max(
+        defender.attack - defenderAttackLoss,
+        defender.attack * 0.5
+      );
 
-    // Process battle outcome
-    if (isAttackMissed) {
-      console.log("Attack missed");
-      report.attackMissed = true;
-    } else {
-      // Swap attacker and defender roles
-      const temp = attacker;
-      attacker = defender;
-      defender = temp;
+      // Check if attack misses based on defender's luck value
+      const isAttackMissed = Math.random() < defender.luck / 100;
 
-      // Reduce hit points of defender
-      defender.hit_points -= attackerDamage;
-
-      // Check if defender's hit points reach zero
-      if (defender.hit_points <= 0) {
-        console.log("Defender defeated");
-        report.defenderDefeated = true;
-
-        // Calculate gold stolen between 10% and 20% of defender's total gold
-        const goldStolen = Math.floor(
-          defender.gold * (Math.random() * 0.1 + 0.1)
-        );
-
-        // Update gold amounts for attacker and defender
-        attacker.gold += goldStolen;
-        defender.gold -= goldStolen;
-        report.goldStolen = goldStolen;
-
-        console.log(`Gold Stolen: ${goldStolen}`);
-
-        // Submit battle result to leaderboard
-        submitBattleResult(attacker.id, goldStolen);
+      // Process battle outcome
+      if (isAttackMissed) {
+        console.log("Attack missed");
+        report.attackMissed = true;
       } else {
-        console.log("Battle inconclusive, defender still has hit points");
+        report.attackMissed = false;
+        // Swap attacker and defender roles
+        const temp = attacker;
+        attacker = defender;
+        defender = temp;
+
+        // Reduce hit points of defender
+        defender.hit_points -= attackerDamage;
+
+        // Check if defender's hit points reach zero
+        if (defender.hit_points <= 0) {
+          console.log("Defender defeated");
+          report.defenderDefeated = true;
+
+          // Calculate gold stolen between 10% and 20% of defender's total gold
+          const goldStolen = Math.floor(
+            defender.gold * (Math.random() * 0.1 + 0.1)
+          );
+
+          // Update gold amounts for attacker and defender
+          attacker.gold += goldStolen;
+          defender.gold -= goldStolen;
+          report.goldStolen = goldStolen;
+
+          console.log(`Gold Stolen: ${goldStolen}`);
+
+          // Submit battle result to leaderboard
+          submitBattleResult(attacker.id, goldStolen);
+        } else {
+          console.log("Battle inconclusive, defender still has hit points");
+        }
       }
+
+      // Log battle details
+      console.log(`Attacker: ${attacker.name}, Defender: ${defender.name}`);
+      console.log(
+        `Attacker Attack Value: ${attacker.attack}, Defender Attack Value: ${defender.attack}`
+      );
+      console.log(
+        `Attacker Hit Points: ${attacker.hit_points}, Defender Hit Points: ${defender.hit_points}`
+      );
+      console.log("------------------------------------------------------");
+
+      // Update attacker and defender in the database
+      updatePlayer(attacker);
+      updatePlayer(defender);
+
+      report.attacker = attacker;
+      report.defender = defender;
     }
 
-    // Log battle details
-    console.log(`Attacker: ${attacker.name}, Defender: ${defender.name}`);
-    console.log(
-      `Attacker Attack Value: ${attacker.attack}, Defender Attack Value: ${defender.attack}`
-    );
-    console.log(
-      `Attacker Hit Points: ${attacker.hit_points}, Defender Hit Points: ${defender.hit_points}`
-    );
-
-    // Update attacker and defender in the database
-    updatePlayer(attacker);
-    updatePlayer(defender);
-
-    report.attacker = attacker;
-    report.defender = defender;
+    if (round === maxRounds) {
+      console.log("Battle reached maximum number of rounds");
+    }
   });
 };
 
