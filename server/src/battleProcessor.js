@@ -158,4 +158,6 @@ const updatePlayer = (player) => {
 
 module.exports = {
   executeBattle,
+  updatePlayer,
+  submitBattleResult,
 };
