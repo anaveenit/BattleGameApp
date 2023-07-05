@@ -36,7 +36,7 @@ app.post("/battles", authenticate, (req, res) => {
   // Validate input
   if (!attackerId || !defenderId) {
     return res.status(400).json({
-      error: "Missing battle details" + attackerId + "," + defenderId,
+      error: "Missing battle details",
     });
   }
 
