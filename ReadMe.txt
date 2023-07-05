@@ -100,8 +100,8 @@ Authorization:  <token>
 
 **** Project Approach ****
 
-The provided code seems to follow a functional design approach rather 
-than a class-based architecture. 
+The provided code  follows a functional design approach.
+
 Let's analyze the architecture and design aspects of the code:
 
 1) Modularity: The code is divided into different modules, 
