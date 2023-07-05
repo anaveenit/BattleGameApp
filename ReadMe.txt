@@ -7,6 +7,7 @@ This is a Battle Game App developed using Node.js, React.js, and MySQL.
 - Node.js
 - React.js
 - MySQL
+- Redis(for maintaining battle queue asynchronously)
 
 ## Installation
 
