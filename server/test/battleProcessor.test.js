@@ -1,119 +1,128 @@
-const assert = require("assert");
 const sinon = require("sinon");
-const battleProcessor = require("./battleProcessor");
-const connection = require("./db");
+const {
+  executeBattle,
+  updatePlayer,
+  submitBattleResult,
+} = require("../src/battleProcessor");
+const connection = require("../src/db");
 
-// Mock the database connection and query methods
-const connectionMock = {
-  query: sinon.stub(),
-};
-
-// Mock the battle object
-const battleMock = {
-  attackerId: 1,
-  defenderId: 2,
-};
-
-// Mock the players retrieved from the database
-const player1Mock = {
-  id: 1,
-  name: "player1",
-  gold: 100,
-  attack: 80,
-  hit_points: 100,
-  luck: 10,
-};
-
-const player2Mock = {
-  id: 2,
-  name: "player2",
-  gold: 100,
-  attack: 80,
-  hit_points: 100,
-  luck: 10,
-};
-
-// Mock the database query results
-const queryResultsMock = [player1Mock, player2Mock];
-
-describe("Battle Processor", () => {
-  let connectionStub;
-
-  beforeEach(() => {
-    // Reset the stubs before each test
-    connectionMock.query.reset();
-
-    // Stub the database connection query method to return the mocked results
-    connectionStub = sinon
-      .stub(connection, "query")
-      .callsFake((sql, values, callback) => {
-        callback(null, queryResultsMock);
-      });
+describe("executeBattle", () => {
+  before(() => {
+    // Stub the database connection
+    sinon.stub(connection, "query");
   });
 
-  afterEach(() => {
-    // Restore the original methods after each test
-    connectionStub.restore();
+  after(() => {
+    // Restore the stubbed functions
+    connection.query.restore();
   });
 
-  it("should execute battle and update players' data", (done) => {
-    // Stub the submitBattleResult method
-    const submitBattleResultStub = sinon.stub(
-      battleProcessor,
-      "submitBattleResult"
+  it("should execute the battle successfully", (done) => {
+    // Stub the database query to return the expected results
+    const attackerId = 1;
+    const defenderId = 2;
+    const attacker = {
+      id: attackerId,
+      name: "Attacker",
+      attack: 100,
+      hit_points: 1000,
+      luck: 10,
+      gold: 1000,
+    };
+    const defender = {
+      id: defenderId,
+      name: "Defender",
+      attack: 100,
+      hit_points: 1000,
+      luck: 5,
+      gold: 1000,
+    };
+    const results = [attacker, defender];
+    connection.query.callsFake((sql, values, callback) => {
+      if (sql === "SELECT * FROM Player WHERE id IN (?, ?)") {
+        callback(null, results);
+      } else {
+        callback(new Error("Invalid query"));
+      }
+    });
+
+    // Stub the updatePlayer and submitBattleResult functions
+    sinon.stub(global.console, "log");
+    sinon.stub(global.console, "error");
+    sinon.stub(global.console, "warn");
+    sinon.stub(global.console, "info");
+    sinon.stub(global.console, "debug");
+    sinon.stub(global.console, "trace");
+    sinon.stub(global.console, "dir");
+    sinon.stub(global.console, "time");
+    sinon.stub(global.console, "timeEnd");
+    sinon.stub(global.console, "timeLog");
+    sinon.stub(global.console, "assert");
+    sinon.stub(global.console, "count");
+    sinon.stub(global.console, "countReset");
+    sinon.stub(global.console, "group");
+    sinon.stub(global.console, "groupCollapsed");
+    sinon.stub(global.console, "groupEnd");
+
+    sinon.stub(updatePlayer);
+    sinon.stub(submitBattleResult);
+
+    // Define the expected report object
+    const expectedReport = {
+      attacker: attacker,
+      defender: defender,
+      attackMissed: false,
+      goldStolen: 0,
+      defenderDefeated: false,
+    };
+
+    // Execute the battle
+    executeBattle({ attackerId, defenderId });
+
+    // Verify the behavior
+    sinon.assert.calledWithExactly(updatePlayer, sinon.match(attacker));
+    sinon.assert.calledWithExactly(updatePlayer, sinon.match(defender));
+    sinon.assert.calledWithExactly(
+      console.log,
+      `Attacker: ${attacker.name}, Defender: ${defender.name}`
+    );
+    sinon.assert.calledWithExactly(
+      console.log,
+      `Attacker Attack Value: ${attacker.attack}, Defender Attack Value: ${defender.attack}`
+    );
+    sinon.assert.calledWithExactly(
+      console.log,
+      `Attacker Hit Points: ${attacker.hit_points}, Defender Hit Points: ${defender.hit_points}`
+    );
+    sinon.assert.calledWithExactly(
+      console.log,
+      "------------------------------------------------------"
     );
 
-    // Call the executeBattle method
-    battleProcessor.executeBattle(battleMock);
-
-    // Verify that the database query was called with the correct SQL and values
-    assert(connectionMock.query.calledOnce);
-    assert.deepStrictEqual(
-      connectionMock.query.getCall(0).args[0],
-      "SELECT * FROM Player WHERE id IN (?, ?)"
-    );
-    assert.deepStrictEqual(connectionMock.query.getCall(0).args[1], [1, 2]);
-
-    // Verify that the submitBattleResult method was called once with the correct arguments
-    assert(submitBattleResultStub.calledOnce);
-    assert.deepStrictEqual(submitBattleResultStub.getCall(0).args, [
-      1,
-      sinon.match.number,
-    ]); // playerId and goldStolen
-
-    // Restore the original methods
-    submitBattleResultStub.restore();
+    // Restore the stubbed functions
+    global.console.log.restore();
+    global.console.error.restore();
+    global.console.warn.restore();
+    global.console.info.restore();
+    global.console.debug.restore();
+    global.console.trace.restore();
+    global.console.dir.restore();
+    global.console.time.restore();
+    global.console.timeEnd.restore();
+    global.console.timeLog.restore();
+    global.console.assert.restore();
+    global.console.count.restore();
+    global.console.countReset.restore();
+    global.console.group.restore();
+    global.console.groupCollapsed.restore();
+    global.console.groupEnd.restore();
+    updatePlayer.restore();
+    submitBattleResult.restore();
 
     done();
   });
 
-  it("should log battle details when executing battle", (done) => {
-    // Stub the console.log method to capture logs
-    const consoleLogStub = sinon.stub(console, "log");
-
-    // Call the executeBattle method
-    battleProcessor.executeBattle(battleMock);
-
-    // Verify that the console.log method was called with the expected battle details
-    assert(
-      consoleLogStub.calledWith(
-        `Attacker: ${player2Mock.name}, Defender: ${player1Mock.name}`
-      )
-    );
-    assert(
-      consoleLogStub.calledWith(
-        `Attacker Attack Value: ${player2Mock.attack}, Defender Attack Value: ${player1Mock.attack}`
-      )
-    );
-    assert(
-      consoleLogStub.calledWith(
-        `Attacker Hit Points: ${player2Mock.hit_points}, Defender Hit Points: ${player1Mock.hit_points}`
-      )
-    );
-
-    // Restore the original methods
-    consoleLogStub.restore();
-
-    done();
-  });
+  // Add more test cases for different scenarios if needed
 });
+
+// Add more test cases for other functions if needed
