@@ -35,7 +35,9 @@ app.post("/battles", authenticate, (req, res) => {
 
   // Validate input
   if (!attackerId || !defenderId) {
-    return res.status(400).json({ error: "Missing battle details" });
+    return res.status(400).json({
+      error: "Missing battle details" + attackerId + "," + defenderId,
+    });
   }
 
   // Add battle to the queue
@@ -63,6 +65,13 @@ app.post("/auth", (req, res) => {
   const token = jwt.sign({ username }, secretKey, { expiresIn: "1h" });
 
   return res.json({ token });
+});
+
+// Authenticate user and generate token
+app.get("/health", (req, res) => {
+  const { username, password } = req.body;
+
+  return res.json("Health check success");
 });
 
 // Start the server

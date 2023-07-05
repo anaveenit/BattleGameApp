@@ -126,8 +126,7 @@ queuing a battle, retrieving the leaderboard, and generating authentication toke
 
 6) Error Handling: The code includes basic error handling for various scenarios,
  such as missing battle details, invalid credentials, and database query errors. 
- However, there is room for improvement in terms of error handling and 
- reporting detailed error messages to the clients.
+
 
 
 
