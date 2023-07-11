@@ -30,7 +30,7 @@ const connection = mysql.createConnection({
 Install the server dependencies:
 
 cd server/src
-npm install
+npm install --force
 npm start
 
 Install the client dependencies:
